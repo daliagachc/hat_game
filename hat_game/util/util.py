@@ -6,6 +6,8 @@ from typing import List, Dict
 Team,Gui,DB, Player = None,None,None,None
 
 class Player(object):
+    def get_player_name(self):
+
     pass
 
 class Team(object):
@@ -29,6 +31,5 @@ class Game(object):
 
 
 
-
 g = Game()
-g.gui.
+#g.gui.
