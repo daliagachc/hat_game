@@ -17,8 +17,8 @@ log.ger.debug('import hat game util')
 
 class Player(object):
     name: str
-
-    pass
+    def get_player_name(self):
+        pass
 
 
 class Team(object):
@@ -240,3 +240,4 @@ class Game(object):
         pass
 
 # %%
+
