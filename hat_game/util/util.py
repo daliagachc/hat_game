@@ -476,13 +476,20 @@ class Game(object):
         self.copy_nb_from_template(
             path_source=TEMPLATE_PATH,
             name_source='player_template.ipynb',
-            path_target=self.GAME_FOLDER,
+            path_target=self.PLAYERS_FOLDER,
             name_target=f'{player_name}.ipynb',
             dic_replace={
                 'GAME_NAME':self.game_name,
                 'PLAYER':player_name
             }
         )
+
+    def generate_all_players_nb(self):
+        df = self.database.get_player_team_df()
+        for p,r in df.iterrows():
+            self.generate_player_nb(p)
+
+
     def do_admin_stuff(self):
         # os.makedirs(self.GAME_FOLDER, exist_ok=True)
         os.makedirs(self.DB_FOLDER, exist_ok=True)

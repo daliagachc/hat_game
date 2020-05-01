@@ -29,22 +29,16 @@ player_team_dic = {
 
 # %%
 g = Game(
-    game_name='test10', 
+    game_name='test21', 
     password='PASS', 
     admin_mode = True,
     root_game_folder='../',
     player_team_dic = player_team_dic,
-    drop_db_if_exist=True
+#     drop_db_if_exist=True,
 )
 
 
 # %%
-g.database.get_teams_df()
-
-# %%
-g.database.get_player_team_df()
-
-# %%
-g.generate_player_nb('sara')
+g.generate_all_players_nb()
 
 # %%
