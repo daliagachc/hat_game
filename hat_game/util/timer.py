@@ -25,7 +25,7 @@ def count_down(button:ipywidgets.Button,
 
 
 
-def display_timer(secs):
+def get_timer_button(secs):
     button = ipywidgets.Button(description="Start Timer", button_style='info')
     def _fun(b):
         count_down(b,secs)
@@ -35,5 +35,5 @@ def display_timer(secs):
         _th.start()
 
     button.on_click(_thread)
-    display(button)
+    # display(button)
     return button

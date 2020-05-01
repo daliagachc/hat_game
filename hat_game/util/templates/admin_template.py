@@ -13,20 +13,28 @@
 # ---
 
 # %%
+# %load_ext autoreload
+# %autoreload 2
+
 
 # %%
-import hat_game.util.timer as timer
+from hat_game.util.util import Game
+
 
 # %%
-button = timer.display_timer(10)
+player_team_dic = {
+
+}
 
 # %%
-button.description = "4"
+g = Game(
+    game_name='GAME_NAME', 
+    password='PASS', 
+    admin_mode = True,
+    root_game_folder='../',
+    player_team_dic = player_team_dic,
+#     drop_db_if_exist=True,
+)
 
-# %%
-sdf
-
-# %%
-button.click()
 
 # %%

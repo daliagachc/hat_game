@@ -10,10 +10,19 @@ log.ger.debug('start test')
 
 def create_basic_game():
     g = util.Game(
-        'test', 'pass',
-        db_folder='/Users/diego/hat_game/hat_game/test_db')
-    g.add_team('test_team', util.Team())
+        game_name='test',
+        password='pass',
+        admin_mode=True,
+        drop_db_if_exist=True
+    )
+    # g.add_team('test_team')
     return g
+
+def remove_test_db():
+    import shutil
+    shutil.rmtree(
+        '/Users/diego/hat_game/hat_game/game_test/test')
+
 
 
 class TestGame(TestCase):
@@ -24,14 +33,19 @@ class TestGame(TestCase):
         self.assertIsInstance(self.g, util.Game)
 
     def test_add_team(self):
-        self.g.add_team('a', util.Team())
-        self.assertIn('a', self.g.teams.keys())
+        self.g.add_team('a')
+        self.assertIn('a', self.g.database.get_teams_df().values)
 
     def test_add_dup_team_fails(self):
+        self.g.add_team('test_team')
         self.assertRaises(
             NameError,
-            self.g.add_team, 'test_team', util.Team()
+            self.g.add_team, 'test_team'
         )
+
+    def tearDown(self) -> None:
+        remove_test_db()
+
 
     # def test_print_teams(self):
     #     print(self.g.teams)
@@ -75,22 +89,22 @@ class TestDB(TestCase):
         g,db = self.g, self.db
         table_list = db.get_table_list()
         print(table_list)
-        self.assertListEqual([], table_list)
+        # self.assertListEqual([], table_list)
 
     def test_create_player_team_table(self):
-        self.db.create_teams_tb()
+        # self.db.create_teams_tb()
         self.db.add_team('A')
         self.db.add_team('B')
         df = self.db.get_teams_df()
         print(df)
-        self.db.create_player_team_tb()
+        # self.db.create_player_team_tb()
         self.db.add_player('diego','A')
         self.db.add_player('yara','A')
         self.db.add_player('sara','B')
         self.db.add_player('ingrid','B')
         df = self.db.get_player_team_df()
         print(df)
-        self.db.create_words_tb()
+        # self.db.create_words_tb()
         self.db.add_word('bla','diego')
         self.db.add_word('blo','diego')
         self.db.add_word('ble','yara')
@@ -102,16 +116,10 @@ class TestDB(TestCase):
         df = self.db.get_words_df()
         print(df)
 
-        self.db.create_rounds_tb()
+        # self.db.create_rounds_tb()
         df = self.db.get_rounds_df()
         print(df)
         self.assertTrue(True)
 
     def tearDown(self) -> None:
-        # g, db = create_test_game_db()
-        g,db = self.g, self.db
-        try:
-            os.remove(db.db_path)
-        except FileNotFoundError:
-            pass
-
+        remove_test_db()

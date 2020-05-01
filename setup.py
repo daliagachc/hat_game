@@ -8,5 +8,5 @@ setup(
     license='',
     author='diego aliaga, sara blichner',
     author_email='',
-    description=''
+    description='', install_requires=['IPython', 'ipykernel']
 )

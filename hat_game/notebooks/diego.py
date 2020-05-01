@@ -13,20 +13,14 @@
 # ---
 
 # %%
+# %load_ext autoreload
+# %autoreload 2
+from hat_game.util.util import Game
+g = Game(game_name='test', password='pass', player_name='diego',root_game_folder='../../')
+g.gui.create_layout()
 
 # %%
-import hat_game.util.timer as timer
 
 # %%
-button = timer.display_timer(10)
-
-# %%
-button.description = "4"
-
-# %%
-sdf
-
-# %%
-button.click()
 
 # %%

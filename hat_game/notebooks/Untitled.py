@@ -13,20 +13,3 @@
 # ---
 
 # %%
-
-# %%
-import hat_game.util.timer as timer
-
-# %%
-button = timer.display_timer(10)
-
-# %%
-button.description = "4"
-
-# %%
-sdf
-
-# %%
-button.click()
-
-# %%
