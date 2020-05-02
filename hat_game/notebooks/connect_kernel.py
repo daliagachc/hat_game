@@ -22,20 +22,20 @@ g = Game(game_name='test', password='pass', player_name='admin',
          )
 
 # %%
-g.database.execute_command_in_all_kernels(
+g.db.execute_command_in_all_kernels(
     'g.gui.layout.header.click()')
 
 # %%
-g.database.execute_command_in_specific_kernels(
+g.db.execute_command_in_specific_kernels(
     'a=4',['diego']
     )
 
 # %%
-g.database.execute_command_in_specific_kernels(
+g.db.execute_command_in_specific_kernels(
     'a=2',['sara']
     )
 
 # %%
-g.database.get_kernels_df().loc['diego']['kernel']
+g.db.get_kernels_df().loc['diego']['kernel']
 
 # %%

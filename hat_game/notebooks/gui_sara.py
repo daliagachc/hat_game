@@ -13,14 +13,12 @@
 # ---
 
 # %%
-# %load_ext autoreload
-# %autoreload 2
-from hat_game.util.util import Game;g = Game(game_name='test21', password='PASS', player_name='diego',root_game_folder='../../');g.gui.create_layout()
-
+import hat_game.util.gui_class as gui
 
 # %%
-g.gui.timer_button.disabled=False
+g = gui.Gui()
 
 # %%
+g.start_game()
 
 # %%

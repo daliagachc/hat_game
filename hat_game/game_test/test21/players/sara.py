@@ -15,9 +15,21 @@
 # %%
 # %load_ext autoreload
 # %autoreload 2
+
+
+# %%
 from hat_game.util.util import Game
 g = Game(game_name='test21', password='PASS', player_name='sara',root_game_folder='../../')
 g.gui.create_layout()
 
+
+# %%
+g.gui.timer_button.disabled=False
+
+# %%
+g.gui.start_count_down()
+
+# %%
+g.gui.timer_button.threaded_count_down(3)
 
 # %%

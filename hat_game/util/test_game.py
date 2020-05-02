@@ -34,7 +34,7 @@ class TestGame(TestCase):
 
     def test_add_team(self):
         self.g.add_team('a')
-        self.assertIn('a', self.g.database.get_teams_df().values)
+        self.assertIn('a', self.g.db.get_teams_df().values)
 
     def test_add_dup_team_fails(self):
         self.g.add_team('test_team')
