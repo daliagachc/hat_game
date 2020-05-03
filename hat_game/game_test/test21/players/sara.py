@@ -24,12 +24,18 @@ g.gui.create_layout()
 
 
 # %%
-g.gui.timer_button.disabled=False
+g.gui.timer_button.stop = True
 
 # %%
-g.gui.start_count_down()
+st =pprint.pformat(g.db.get_config_df()['value'])
 
 # %%
-g.gui.timer_button.threaded_count_down(3)
+g.gui.center_button.description='''
+z \n
+sd
+sd'''
+
+# %%
+st
 
 # %%

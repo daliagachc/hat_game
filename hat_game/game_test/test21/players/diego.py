@@ -19,8 +19,6 @@ from hat_game.util.util import Game;g = Game(game_name='test21', password='PASS'
 
 
 # %%
-g.gui.timer_button.disabled=False
-
-# %%
+g.db.get_players_not_active()
 
 # %%

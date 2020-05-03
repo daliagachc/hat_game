@@ -8,7 +8,6 @@ import sqlite3
 # Team,Gui,DB, Player = None,None,None,None
 import hat_game.util.logger as log
 import pandas as pd
-import hat_game.util.timer as timer
 import jupyter_client
 import json
 import jupytext
@@ -20,6 +19,7 @@ import time
 import threading
 
 # %%
+CURRENT_PLAYER = 'current_player'
 NUMBER_OF_ROUNDS = 'number_of_rounds'
 NUMBER_OF_WORDS = 'number_of_words'
 TIMER_SECS = 'timer_secs'
@@ -39,17 +39,17 @@ class TimerButton(ipywidgets.Button):
     def __init__(self,
                  description="Start Timer",
                  button_style='info',
-                 game = None,
+                 game=None,
                  **kwargs):
         super().__init__(description=description,
                          button_style=button_style,
                          **kwargs)
         self.original_desc = self.description
         self.disabled = True
-        self.game:Game = game
+        self.game: Game = game
         self.on_click(self._click)
-
-
+        # noinspection PyTypeChecker
+        self.stop:bool = False
 
     def count_down(self, secs: int):
         self.disabled = True
@@ -57,18 +57,22 @@ class TimerButton(ipywidgets.Button):
         s = secs
         self.description = f'{s}'
 
-        while s > 0:
+        while (s > 0) and (self.stop ==False):
             time.sleep(1)
             s -= 1
             self.description = f'{s}'
 
         self.description = self.original_desc
+        self.game.gui.set_center_banner()
         # self.disabled = False
 
     def threaded_count_down(self, secs):
+        self.stop = False
         _th = threading.Thread(target=self.count_down,
                                args=(secs,))
+        # self.thread = _th
         _th.start()
+
 
     @staticmethod
     def _click(self):
@@ -76,7 +80,8 @@ class TimerButton(ipywidgets.Button):
         self.game.execute_command_in_all_kernels(
             f'g.gui.timer_button.threaded_count_down({secs})'
         )
-
+        self.game.gui.set_question_box()
+        self.game.gui.set_bt_word()
 
 
 class Player(object):
@@ -109,8 +114,17 @@ class Gui(object):
         self.right_button = create_expanded_button('Right', 'info')
         self.footer_button = create_expanded_button('Footer', 'success')
         self.timer_button = TimerButton(game=self.game)
+        # noinspection PyTypeChecker
+        self.bt_good:Button = None
+        # noinspection PyTypeChecker
+        self.bt_pass:Button = None
+        # noinspection PyTypeChecker
+        self.bt_word:Button = None
 
         pass
+
+    def set_center_banner(self):
+        self.layout.center = self.center_button
 
     def create_layout(self):
         # timer.display_timer(5)
@@ -168,6 +182,47 @@ class Gui(object):
     def start_count_down(self):
         self.timer_button.click()
 
+    def get_questions_box(self):
+        lay = Layout(height='auto',
+                     width='auto',
+                     align_items='stretch',
+                     display='flex',
+                     justify_content='center'
+                     )
+        self.bt_good = Button(description='good',layout=lay)
+        def _click_good(bt:Button):
+            self.press_bt_good()
+            self.set_bt_word()
+        self.bt_good.on_click(_click_good)
+
+        # bt_bad = Button()
+        self.bt_pass = Button(description='pass',layout=lay)
+        def _click_pass(bt:Button):
+            self.press_bt_pass()
+            self.set_bt_word()
+        self.bt_pass.on_click(_click_pass)
+        self.bt_word = Button(description='',layout=lay)
+        self.bt_word.disabled = True
+        l1 = ipywidgets.HBox([self.bt_good, self.bt_pass],layout=lay)
+        l2 = ipywidgets.VBox([l1, self.bt_word],layout=lay)
+
+        return l2
+
+    def set_bt_word(self):
+        self.bt_word.description = self.game.db.get_next_word()
+    def set_question_box(self):
+        self.layout.center = self.get_questions_box()
+    def press_bt_good(self):
+        self.game.db.add_result_move(
+            self.bt_word.description,
+            'good'
+        )
+    def press_bt_pass(self):
+        self.game.db.add_result_move(
+            self.bt_word.description,
+            'pass'
+        )
+
 
 def conn_decorator(func):
     @functools.wraps(func)
@@ -176,6 +231,19 @@ def conn_decorator(func):
         self._connect()
         value = func(self, *args, **kwargs)
         self.conn.commit()
+        self._close_conn()
+        return value
+
+    return wrapper_decorator
+
+
+def conn_decorator_no_commit(func):
+    @functools.wraps(func)
+    def wrapper_decorator(self, *args, **kwargs):
+        self: DB
+        self._connect()
+        value = func(self, *args, **kwargs)
+        # self.conn.commit()
         self._close_conn()
         return value
 
@@ -461,8 +529,6 @@ class DB(object):
         df['kernel'] = df.apply(_get_kernel, axis=1)
         return df[['kernel']]
 
-
-
     @conn_decorator
     def add_player(self, player, team):
         sql = f'''
@@ -491,6 +557,65 @@ class DB(object):
         '''
         # log.ger.debug(sql)
         self.conn.execute(sql)
+
+    @conn_decorator
+    def get_next_word(self):
+        round_number = self.get_config_dic()['current_round']
+        self._connect()
+        sql = f'''
+        select word from {self.tb_words}
+        where word not in (
+            select word from {self.tb_rounds} 
+            where (round={round_number} and result is 'good')
+        )
+        ORDER BY RANDOM() LIMIT 1
+        '''
+        # print(sql)
+        result = list(pd.read_sql(sql, self.conn)['word'].values)
+        if len(result) is 0:
+            result = False
+        else:
+            result = result[0]
+        return result
+
+    def get_team(self):
+        df = self.get_player_team_df()
+        team = df.loc[self.game.player_name]['team'][0]
+        return team
+
+    @conn_decorator
+    def get_word_id(self, word):
+        sql = f'''
+        select word_id from {self.tb_words} where word is '{word}'
+        '''
+
+        df = pd.read_sql(sql, self.conn)['word_id'].loc[0]
+        return df
+
+    @conn_decorator
+    def add_result_move(self, word, result):
+        _round = self.get_config_dic()['current_round']
+        player = self.game.player_name
+        team = self.get_team()
+        word_id = self.get_word_id(word)
+
+        sql = f'''
+        insert into {self.tb_rounds}
+        (round,team,player,word,word_id,result)
+        values
+        ({_round},'{team}','{player}','{word}',{word_id},'{result}')
+        '''
+        self._connect()
+        self.conn.execute(sql)
+
+
+    def get_players_not_active(self):
+        player = self.get_config_dic()[CURRENT_PLAYER]
+        all_players = list(self.get_player_team_df().index.values)
+        rest_players = list(set(all_players) - {player})
+        return rest_players
+
+    # DB END
 
 
 class Game(object):
@@ -567,6 +692,16 @@ class Game(object):
 
         pass
 
+    def all_show_words(self):
+        self.execute_command_in_all_kernels(
+            'g.gui.show_words()'
+        )
+
+    def all_set_center_banner(self):
+        self.execute_command_in_all_kernels(
+            'g.gui.set_center_banner()'
+        )
+
     def create_config_df(self):
         dic = {
             GAME_NAME       : {'value': self.game_name, 'type': 'str'},
@@ -633,7 +768,7 @@ class Game(object):
     def generate_all_players_nb(self):
         df = self.db.get_player_team_df()
         for p, r in df.iterrows():
-            p:str
+            p: str
             self.generate_player_nb(p)
 
     def do_admin_stuff(self):
@@ -687,6 +822,17 @@ class Game(object):
             km: jupyter_client.asynchronous.client.AsyncKernelClient
             km.execute(cmd, silent=True)
 
+    def activate_current_player(self):
+        cmd = 'g.gui.timer_button.disabled = False'
+        player = self.db.get_config_dic()[CURRENT_PLAYER]
+        self.execute_command_in_specific_kernels(cmd,[player])
+        self.deactivate_no_current_player()
+
+
+    def deactivate_no_current_player(self):
+        cmd = 'g.gui.timer_button.disabled = True'
+        players = self.db.get_players_not_active()
+        self.execute_command_in_specific_kernels(cmd,players)
 
 
 # %%

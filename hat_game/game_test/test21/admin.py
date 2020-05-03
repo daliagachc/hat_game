@@ -42,45 +42,34 @@ g = Game(
 
 
 # %%
-g.execute_command_in_all_kernels(
-    'g.gui.show_words()'
-)
+g.all_show_words()
 
 # %%
-
-# %%
-g.execute_command_in_all_kernels(
-    'g.gui.start_count_down()'
-)
+g.all_set_center_banner()
 
 # %%
 g.db.add_update_config_val('timer_on','0','int')
 
 # %%
 g.db.add_update_config_val('current_player','sara','str')
-g.db.add_update_config_val('current_round','1','int')
+g.db.add_update_config_val('current_round','3','int')
+g.db.add_update_config_val('timer_secs','30','int')
+g.activate_current_player()
+# g.db.add_update_config_val('timer_on','0','int')
+# g.db.add_update_config_val('number_of_words','10','int')
 
 # %%
-g.db.add_update_config_val('timer_on','0','int')
 
 # %%
 g.db.get_config_dic()
 
 # %%
-import hat_game.util.util as util
+g.all_set_center_banner()
 
 # %%
-b = util.TimerButton(game=g)
+g.db._close_conn()
 
 # %%
-b
-
-# %%
-b.count_down(5)
-
-# %%
-b.threaded_count_down(5)
-
-# %%
+g.db._connect()
 
 # %%
